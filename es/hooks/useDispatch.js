@@ -7,10 +7,14 @@ import { useStore as useDefaultStore, createStoreHook } from './useStore';
  * @returns {Function} A `useDispatch` hook bound to the specified context.
  */
 
-export function createDispatchHook(context = ReactReduxContext) {
-  const useStore = context === ReactReduxContext ? useDefaultStore : createStoreHook(context);
+export function createDispatchHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useStore = context === ReactReduxContext ? useDefaultStore : createStoreHook(context);
   return function useDispatch() {
-    const store = useStore();
+    var store = useStore();
     return store.dispatch;
   };
 }
@@ -36,4 +40,4 @@ export function createDispatchHook(context = ReactReduxContext) {
  * }
  */
 
-export const useDispatch = /*#__PURE__*/createDispatchHook();
+export var useDispatch = /*#__PURE__*/createDispatchHook();

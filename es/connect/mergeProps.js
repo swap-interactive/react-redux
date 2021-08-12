@@ -4,15 +4,14 @@ export function defaultMergeProps(stateProps, dispatchProps, ownProps) {
   return _extends({}, ownProps, stateProps, dispatchProps);
 }
 export function wrapMergePropsFunc(mergeProps) {
-  return function initMergePropsProxy(dispatch, {
-    displayName,
-    pure,
-    areMergedPropsEqual
-  }) {
-    let hasRunOnce = false;
-    let mergedProps;
+  return function initMergePropsProxy(dispatch, _ref) {
+    var displayName = _ref.displayName,
+        pure = _ref.pure,
+        areMergedPropsEqual = _ref.areMergedPropsEqual;
+    var hasRunOnce = false;
+    var mergedProps;
     return function mergePropsProxy(stateProps, dispatchProps, ownProps) {
-      const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+      var nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
 
       if (hasRunOnce) {
         if (!pure || !areMergedPropsEqual(nextMergedProps, mergedProps)) mergedProps = nextMergedProps;
@@ -30,6 +29,8 @@ export function whenMergePropsIsFunction(mergeProps) {
   return typeof mergeProps === 'function' ? wrapMergePropsFunc(mergeProps) : undefined;
 }
 export function whenMergePropsIsOmitted(mergeProps) {
-  return !mergeProps ? () => defaultMergeProps : undefined;
+  return !mergeProps ? function () {
+    return defaultMergeProps;
+  } : undefined;
 }
 export default [whenMergePropsIsFunction, whenMergePropsIsOmitted];

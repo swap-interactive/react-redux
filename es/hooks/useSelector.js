@@ -1,24 +1,32 @@
 import { useReducer, useRef, useMemo, useContext, useDebugValue } from 'react';
 import { useReduxContext as useDefaultReduxContext } from './useReduxContext';
-import { createSubscription } from '../utils/Subscription';
+import Subscription from '../utils/Subscription';
 import { useIsomorphicLayoutEffect } from '../utils/useIsomorphicLayoutEffect';
 import { ReactReduxContext } from '../components/Context';
 
-const refEquality = (a, b) => a === b;
+var refEquality = function refEquality(a, b) {
+  return a === b;
+};
 
 function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contextSub) {
-  const [, forceRender] = useReducer(s => s + 1, 0);
-  const subscription = useMemo(() => createSubscription(store, contextSub), [store, contextSub]);
-  const latestSubscriptionCallbackError = useRef();
-  const latestSelector = useRef();
-  const latestStoreState = useRef();
-  const latestSelectedState = useRef();
-  const storeState = store.getState();
-  let selectedState;
+  var _useReducer = useReducer(function (s) {
+    return s + 1;
+  }, 0),
+      forceRender = _useReducer[1];
+
+  var subscription = useMemo(function () {
+    return new Subscription(store, contextSub);
+  }, [store, contextSub]);
+  var latestSubscriptionCallbackError = useRef();
+  var latestSelector = useRef();
+  var latestStoreState = useRef();
+  var latestSelectedState = useRef();
+  var storeState = store.getState();
+  var selectedState;
 
   try {
     if (selector !== latestSelector.current || storeState !== latestStoreState.current || latestSubscriptionCallbackError.current) {
-      const newSelectedState = selector(storeState); // ensure latest selected state is reused so that a custom equality function can result in identical references
+      var newSelectedState = selector(storeState); // ensure latest selected state is reused so that a custom equality function can result in identical references
 
       if (latestSelectedState.current === undefined || !equalityFn(newSelectedState, latestSelectedState.current)) {
         selectedState = newSelectedState;
@@ -30,30 +38,30 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
     }
   } catch (err) {
     if (latestSubscriptionCallbackError.current) {
-      ;
-      err.message += `\nThe error may be correlated with this previous error:\n${latestSubscriptionCallbackError.current.stack}\n\n`;
+      err.message += "\nThe error may be correlated with this previous error:\n" + latestSubscriptionCallbackError.current.stack + "\n\n";
     }
 
     throw err;
   }
 
-  useIsomorphicLayoutEffect(() => {
+  useIsomorphicLayoutEffect(function () {
     latestSelector.current = selector;
     latestStoreState.current = storeState;
     latestSelectedState.current = selectedState;
     latestSubscriptionCallbackError.current = undefined;
   });
-  useIsomorphicLayoutEffect(() => {
+  useIsomorphicLayoutEffect(function () {
     function checkForUpdates() {
       try {
-        const newStoreState = store.getState();
-        const newSelectedState = latestSelector.current(newStoreState);
+        var newStoreState = store.getState();
 
-        if (equalityFn(newSelectedState, latestSelectedState.current)) {
+        var _newSelectedState = latestSelector.current(newStoreState);
+
+        if (equalityFn(_newSelectedState, latestSelectedState.current)) {
           return;
         }
 
-        latestSelectedState.current = newSelectedState;
+        latestSelectedState.current = _newSelectedState;
         latestStoreState.current = newStoreState;
       } catch (err) {
         // we ignore all errors here, since when the component
@@ -69,7 +77,9 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
     subscription.onStateChange = checkForUpdates;
     subscription.trySubscribe();
     checkForUpdates();
-    return () => subscription.tryUnsubscribe();
+    return function () {
+      return subscription.tryUnsubscribe();
+    };
   }, [store, subscription]);
   return selectedState;
 }
@@ -81,28 +91,38 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
  */
 
 
-export function createSelectorHook(context = ReactReduxContext) {
-  const useReduxContext = context === ReactReduxContext ? useDefaultReduxContext : () => useContext(context);
-  return function useSelector(selector, equalityFn = refEquality) {
+export function createSelectorHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useReduxContext = context === ReactReduxContext ? useDefaultReduxContext : function () {
+    return useContext(context);
+  };
+  return function useSelector(selector, equalityFn) {
+    if (equalityFn === void 0) {
+      equalityFn = refEquality;
+    }
+
     if (process.env.NODE_ENV !== 'production') {
       if (!selector) {
-        throw new Error(`You must pass a selector to useSelector`);
+        throw new Error("You must pass a selector to useSelector");
       }
 
       if (typeof selector !== 'function') {
-        throw new Error(`You must pass a function as a selector to useSelector`);
+        throw new Error("You must pass a function as a selector to useSelector");
       }
 
       if (typeof equalityFn !== 'function') {
-        throw new Error(`You must pass a function as an equality function to useSelector`);
+        throw new Error("You must pass a function as an equality function to useSelector");
       }
     }
 
-    const {
-      store,
-      subscription: contextSub
-    } = useReduxContext();
-    const selectedState = useSelectorWithStoreAndSubscription(selector, equalityFn, store, contextSub);
+    var _useReduxContext = useReduxContext(),
+        store = _useReduxContext.store,
+        contextSub = _useReduxContext.subscription;
+
+    var selectedState = useSelectorWithStoreAndSubscription(selector, equalityFn, store, contextSub);
     useDebugValue(selectedState);
     return selectedState;
   };
@@ -131,4 +151,4 @@ export function createSelectorHook(context = ReactReduxContext) {
  * }
  */
 
-export const useSelector = /*#__PURE__*/createSelectorHook();
+export var useSelector = /*#__PURE__*/createSelectorHook();

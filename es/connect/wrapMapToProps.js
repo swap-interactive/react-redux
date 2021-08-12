@@ -1,12 +1,7 @@
 import verifyPlainObject from '../utils/verifyPlainObject';
-export function wrapMapToPropsConstant( // * Note:
-//  It seems that the dispatch argument
-//  could be a dispatch function in some cases (ex: whenMapDispatchToPropsIsMissing)
-//  and a state object in some others (ex: whenMapStateToPropsIsMissing)
-// eslint-disable-next-line no-unused-vars
-getConstant) {
-  return function initConstantSelector(dispatch) {
-    const constant = getConstant(dispatch);
+export function wrapMapToPropsConstant(getConstant) {
+  return function initConstantSelector(dispatch, options) {
+    var constant = getConstant(dispatch, options);
 
     function constantSelector() {
       return constant;
@@ -24,7 +19,7 @@ getConstant) {
 // therefore not reporting its length accurately..
 
 export function getDependsOnOwnProps(mapToProps) {
-  return mapToProps.dependsOnOwnProps ? Boolean(mapToProps.dependsOnOwnProps) : mapToProps.length !== 1;
+  return mapToProps.dependsOnOwnProps !== null && mapToProps.dependsOnOwnProps !== undefined ? Boolean(mapToProps.dependsOnOwnProps) : mapToProps.length !== 1;
 } // Used by whenMapStateToPropsIsFunction and whenMapDispatchToPropsIsFunction,
 // this function wraps mapToProps in a proxy function which does several things:
 //
@@ -39,11 +34,11 @@ export function getDependsOnOwnProps(mapToProps) {
 //
 
 export function wrapMapToPropsFunc(mapToProps, methodName) {
-  return function initProxySelector(dispatch, {
-    displayName
-  }) {
-    const proxy = function mapToPropsProxy(stateOrDispatch, ownProps) {
-      return proxy.dependsOnOwnProps ? proxy.mapToProps(stateOrDispatch, ownProps) : proxy.mapToProps(stateOrDispatch, undefined);
+  return function initProxySelector(dispatch, _ref) {
+    var displayName = _ref.displayName;
+
+    var proxy = function mapToPropsProxy(stateOrDispatch, ownProps) {
+      return proxy.dependsOnOwnProps ? proxy.mapToProps(stateOrDispatch, ownProps) : proxy.mapToProps(stateOrDispatch);
     }; // allow detectFactoryAndVerify to get ownProps
 
 
@@ -52,7 +47,7 @@ export function wrapMapToPropsFunc(mapToProps, methodName) {
     proxy.mapToProps = function detectFactoryAndVerify(stateOrDispatch, ownProps) {
       proxy.mapToProps = mapToProps;
       proxy.dependsOnOwnProps = getDependsOnOwnProps(mapToProps);
-      let props = proxy(stateOrDispatch, ownProps);
+      var props = proxy(stateOrDispatch, ownProps);
 
       if (typeof props === 'function') {
         proxy.mapToProps = props;
