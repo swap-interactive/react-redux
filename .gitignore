@@ -1,8 +1,5 @@
 node_modules
-dist
-lib
 coverage
-es
 temp/
 react-redux-*/
 
